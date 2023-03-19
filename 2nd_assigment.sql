@@ -13,11 +13,11 @@ group by performer fetch next 50 rows only;
 
 --Query owned song performances
 select band,count('x') "#own band performances" from (select songwriter, songtitle from performances) E
-NATURAL JOIN (select musician songwriter, band from involvement) F where band = 'Hildi'
+NATURAL JOIN (select musician songwriter, band from involvement) F where band = 'Certain Possibility'
 group by band fetch next 50 rows only;
 --------------------------------------
 --Query total number of performances
-select performer,count('x') "total band performings" from performances where performer = 'Hildi' group by performer fetch next 50 rows only;
+select performer,count('x') "total band performings" from performances where performer = 'Certain Possibility' group by performer fetch next 50 rows only;
 
 --Distinct performances songs
 --##############################################################################################
@@ -40,6 +40,20 @@ natural join
 natural join
 (select performer as band,count('x') total_band_performances from performances group by performer));
 
+
+
+select band as performer_name, 
+(original_songs/total_sum_songs)*100 as per_of_recorded_tracks_owned , 
+(total_band_owned_performances/total_band_performances)*100 as  per_of_concert_perf_owned from
+((select band,count('x') original_songs from (select musician passport,band from involvement) NATURAL JOIN (select writer passport, title from tracks) group by band )
+natural join
+(select performer as band,count('x') total_sum_songs from (select pair, performer from albums) NATURAL JOIN (select pair, title from tracks) group by performer)
+natural join
+(select band,count('x') total_band_owned_performances from (select songwriter, songtitle from performances) NATURAL JOIN (select musician songwriter, band from involvement) group by band)
+natural join
+(select performer as band,count('x') total_band_performances from performances group by performer))
+where total_sum_songs >= original_songs and total_band_performances>=total_band_owned_performances and total_band_performances!=0 and total_sum_songs!=0 ;
+
 ----------------------------------------Query 2: Revival (we have to include the !=cases for the percentages)------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 select performer_name, per_of_concert_perf_owned from 
@@ -54,10 +68,28 @@ natural join
 natural join
 (select performer as band,count('x') total_band_performances from performances group by performer)))
 order by per_of_concert_perf_owned desc fetch next 50 rows only;
+--------
 
 
+select performer_name, per_of_concert_perf_owned, avg(when-rec_date) from
+(select performer performer_name, EXTRACT(YEAR FROM when) when, songtitle title from performances) NATURAL JOIN 
+(select title, EXTRACT(YEAR FROM rec_date) rec_date from tracks) NATURAL JOIN 
+(select performer_name, per_of_concert_perf_owned from (
+select band as performer_name, 
+(original_songs/total_sum_songs)*100 as per_of_recorded_tracks_owned , 
+(total_band_owned_performances/total_band_performances)*100 as  per_of_concert_perf_owned from
+((select band,count('x') original_songs from (select musician passport,band from involvement) NATURAL JOIN (select writer passport, title from tracks) group by band )
+natural join
+(select performer as band,count('x') total_sum_songs from (select pair, performer from albums) NATURAL JOIN (select pair, title from tracks) group by performer)
+natural join
+(select band,count('x') total_band_owned_performances from (select songwriter, songtitle from performances) NATURAL JOIN (select musician songwriter, band from involvement) group by band)
+natural join
+(select performer as band,count('x') total_band_performances from performances group by performer))
+where total_sum_songs >= original_songs and total_band_performances>=total_band_owned_performances and total_band_performances!=0 and total_sum_songs!=0)
+order by per_of_concert_perf_owned desc fetch next 10 rows only)
+where when >= rec_date group by performer_name,per_of_concert_perf_owned;
 
-------------------------------- Possible solutions
+------------------------------- Possible solutions--------------------------------------------------------------------------------------------------------------------------------------------------------
 select performer_name, per_of_concert_perf_owned from (
 select band as performer_name, 
 (original_songs/total_sum_songs)*100 as per_of_recorded_tracks_owned , 
@@ -71,6 +103,8 @@ natural join
 (select performer as band,count('x') total_band_performances from performances group by performer))
 where total_sum_songs >= original_songs and total_band_performances>=total_band_owned_performances and total_band_performances!=0 and total_sum_songs!=0 )
 order by per_of_concert_perf_owned desc fetch next 10 rows only;
+
+
 
 
 -----------------------------------------------------------------------VIEWS-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

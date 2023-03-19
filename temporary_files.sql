@@ -2,7 +2,7 @@
 CREATE OR REPLACE PACKAGE melopack as
 	procedure performer_proc (performer varchar2);
 	current_performer varchar2(50);
-	PROCEDURE insert_album (new_pair CHAR,new_FORMAT CHAR,new_album_title VARCHAR2
+	PROCEDURE insert_album (current_performer VARCHAR2,new_pair CHAR,new_FORMAT CHAR,new_album_title VARCHAR2
 	,new_title CHAR,new_release_date DATE, new_publisher VARCHAR2, new_manager NUMBER,new_seq NUMBER
 	,new_writer VARCHAR2,new_duration NUMBER, new_rec_date DATE, new_studio VARCHAR2, new_engineer varchar2);
     PROCEDURE delete_track(new_pair CHAR, new_seq NUMBER);
@@ -30,7 +30,7 @@ exception
 	when others then dbms_output.put_line('other error occurred');
 end performer_proc;
 
-PROCEDURE insert_album (new_pair CHAR,new_FORMAT CHAR,new_album_title VARCHAR2
+PROCEDURE insert_album (current_performer VARCHAR2,new_pair CHAR,new_FORMAT CHAR,new_album_title VARCHAR2
 ,new_title CHAR,new_release_date DATE, new_publisher VARCHAR2, new_manager NUMBER,new_seq NUMBER
 ,new_writer VARCHAR2,new_duration NUMBER, new_rec_date DATE, new_studio VARCHAR2, new_engineer varchar2) is
 flag NUMBER;
@@ -38,7 +38,7 @@ begin
 	select count('x') into flag from (select album_pair from fsdb.recordings where album_pair = new_pair);
 	if flag = 0
 		then insert into Albums(pair,performer,format,title,rel_date,publisher,manager)
-		values(new_pair,melopack.current_performer,new_FORMAT,new_album_title,new_release_date,new_publisher,new_manager);
+		values(new_pair,current_performer,new_FORMAT,new_album_title,new_release_date,new_publisher,new_manager);
 		insert into Tracks(pair,sequ,title,writer,rec_date,studio,engineer,duration)
 		values(new_pair,new_seq,new_title,new_writer,new_rec_date,new_studio,new_engineer,new_duration);
 	else insert into Tracks(pair,sequ,title,writer,rec_date,studio,engineer,duration)
@@ -80,9 +80,9 @@ end;
 end melopack;
 
 
-exec melopack.performer_proc('Begga Ruiz')
+exec melopack.performer_proc('Metallica')
 ---                             perf            pair    format  album     title           release     pub           man   seq      writer      dur     rec        studio              engineer
-exec melopack.insert_album('Z1290OHZ7079WKA','S','72 Seasons','Holiday of blues','28/11/22','Archer',555399004,2,'SE>>0222003242',275,'17/08/95','Stretchers Studios','Ulrich')
+exec melopack.insert_album('Begga Ruiz','Z1290OHZ7079WKA','S','72 Seasons','Holiday of blues','28/11/22','Archer',555399004,2,'SE>>0222003242',275,'17/08/95','Stretchers Studios','Ulrich')
 exec melopack.delete_track('Z1290OHZ7079WKA',2)
 
 insert into Albums (pair,performer,format,title,rel_date,publisher,manager)
@@ -115,7 +115,7 @@ WHERE condition of which row(s) to delete;
 
 
 
-CREATE OR REPLACE PROCEDURE insert_album (new_pair CHAR,new_FORMAT CHAR,new_album_title VARCHAR2
+CREATE OR REPLACE PROCEDURE insert_album (current_performer VARCHAR2,new_pair CHAR,new_FORMAT CHAR,new_album_title VARCHAR2
 ,new_title CHAR,new_release_date DATE, new_publisher VARCHAR2, new_manager NUMBER,new_seq NUMBER
 ,new_writer VARCHAR2,new_duration NUMBER, new_rec_date DATE, new_studio VARCHAR2, new_engineer varchar2) is
 flag NUMBER;
@@ -123,7 +123,7 @@ begin
 	select count('x') into flag from (select album_pair from fsdb.recordings where album_pair = new_pair);
 	if flag = 0
 		then insert into Albums(pair,performer,format,title,rel_date,publisher,manager)
-		values(new_pair,melopack.current_performer,new_FORMAT,new_album_title,new_release_date,new_publisher,new_manager);
+		values(new_pair,current_performer,new_FORMAT,new_album_title,new_release_date,new_publisher,new_manager);
 		insert into Tracks(pair,sequ,title,writer,rec_date,studio,engineer,duration)
 		values(new_pair,new_seq,new_title,new_writer,new_rec_date,new_studio,new_engineer,new_duration);
 	else insert into Tracks(pair,sequ,title,writer,rec_date,studio,engineer,duration)
