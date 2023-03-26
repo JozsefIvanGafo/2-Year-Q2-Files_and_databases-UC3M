@@ -25,16 +25,6 @@ begin
 exception
 	when no_data_found then dbms_output.put_line('No row returned');
 	when too_many_rows then dbms_output.put_line('too many rows returned');
-    when invalid_number then dbms_output.put_line('Invalid number error ORA-01722 ');
-    when value_error then dbms_output.put_line('Invalid value error ORA-06502 ');
-    when storage_error then dbms_output.put_line('storage error  ORA-06500 ');
-    when program_error then dbms_output.put_line('program error  ORA-06501 ');
-    when access_into_null then dbms_output.put_line('acces into null  ORA-06530 ');
-    when dup_val_on_index then dbms_output.put_line('dup value on index ORA-00001');
-    when rowtype_mismatch then dbms_output.put_line('row type mismatch ORA-06504');
-    when subscript_beyond_count then dbms_output.put_line('subscript beyond count ORA-06533');
-    when sys_invalid_rowid then dbms_output.put_line('sys invalid rowid ORA-01410');
-    when collection_is_null then dbms_output.put_line('collection error  ORA-06531');
 	when others then dbms_output.put_line('other error occurred');
 end performer_proc;
 
@@ -55,16 +45,6 @@ begin
 exception
 	when no_data_found then dbms_output.put_line('No row returned');
 	when too_many_rows then dbms_output.put_line('too many rows returned');
-    when invalid_number then dbms_output.put_line('Invalid number error ORA-01722 ');
-    when value_error then dbms_output.put_line('Invalid value error ORA-06502 ');
-    when storage_error then dbms_output.put_line('storage error  ORA-06500 ');
-    when program_error then dbms_output.put_line('program error  ORA-06501 ');
-    when access_into_null then dbms_output.put_line('acces into null  ORA-06530 ');
-    when dup_val_on_index then dbms_output.put_line('dup value on index ORA-00001');
-    when rowtype_mismatch then dbms_output.put_line('row type mismatch ORA-06504');
-    when subscript_beyond_count then dbms_output.put_line('subscript beyond count ORA-06533');
-    when sys_invalid_rowid then dbms_output.put_line('sys invalid rowid ORA-01410');
-    when collection_is_null then dbms_output.put_line('collection error  ORA-06531');
 	when others then dbms_output.put_line('other error occurred');
 end;
 

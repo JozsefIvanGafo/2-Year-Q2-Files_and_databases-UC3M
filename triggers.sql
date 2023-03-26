@@ -57,7 +57,6 @@ insert into bulk_insert (performer,when,sequ,songtitle,songwriter,duration) valu
 insert into bulk_insert (performer,when,sequ,songtitle,songwriter,duration) values ('Rici','10/06/88',102,'Absurdity or valley','FR>>0512630289',60);
 insert into bulk_insert (performer,when,sequ,songtitle,songwriter,duration) values ('Rici','10/06/88',103,'Absurdity thunder','SE>>0414837052',60);
 insert into bulk_insert (performer,when,sequ,songtitle,songwriter,duration) values ('Rici','10/06/88',104,'Acabar','ES>>0971759229',60);
-insert into bulk_insert (performer,when,sequ,songtitle,songwriter,duration) values ('Rici','31/07/09',107,'Absurdity or valley','FR>>0512630289',120);
 --repopulate to performances
 insert into PERFORMANCES (performer,when,sequ,songtitle,songwriter,duration) (select performer,when,sequ,songtitle,songwriter,duration from bulk_insert);
 
@@ -199,3 +198,26 @@ begin
         dbms_output.put_line('--------------------------------------------------------------------------------------------------------');
     end loop;
 end update_concert_2;
+
+----
+--create new table
+CREATE TABLE bulk_insert(
+performer  VARCHAR2(35) not null,
+when  DATE not null,
+sequ number(3),
+songtitle varchar2(100),
+songwriter  varchar2(14),
+duration number(4),
+CONSTRAINT PK_MANAGERS33 PRIMARY KEY(performer,when,sequ)
+);
+--insert the data
+insert into bulk_insert (performer,when,sequ,songtitle,songwriter,duration) values ('Rici','10/06/88',100,'Acabar bandera','SE>>0866705629',60);
+insert into bulk_insert (performer,when,sequ,songtitle,songwriter,duration) values ('Rici','10/06/88',101,'Absurdity thunder','SE>>0414837052',60);
+insert into bulk_insert (performer,when,sequ,songtitle,songwriter,duration) values ('Rici','10/06/88',102,'Absurdity or valley','FR>>0512630289',60);
+insert into bulk_insert (performer,when,sequ,songtitle,songwriter,duration) values ('Rici','10/06/88',103,'Absurdity thunder','SE>>0414837052',60);
+insert into bulk_insert (performer,when,sequ,songtitle,songwriter,duration) values ('Rici','10/06/88',104,'Acabar','ES>>0971759229',60);
+--repopulate to performances
+insert into PERFORMANCES (performer,when,sequ,songtitle,songwriter,duration) (select performer,when,sequ,songtitle,songwriter,duration from bulk_insert);
+
+
+drop CASCADE table bulk_insert;
