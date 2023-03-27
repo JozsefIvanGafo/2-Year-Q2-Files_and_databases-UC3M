@@ -101,3 +101,39 @@ natural join
 where total_sum_songs >= original_songs and total_band_performances>=total_band_owned_performances and total_band_performances!=0 and total_sum_songs!=0)
 order by per_of_concert_perf_owned desc fetch next 10 rows only)
 where when >= rec_date group by performer_name,per_of_concert_perf_owned;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+select band,count('x') original_songs from (select musician passport,band from involvement) NATURAL JOIN (select writer passport, title from tracks) where band='Nici'group by band;
+select performer as band,count('x') total_sum_songs from (select pair, performer from albums) NATURAL JOIN (select pair, title from tracks) where performer='Nici' group by performer;
+select performer band,count('x') total_band_owned_performances from performances where songwriter in (select musician from involvement where band = performer) and performer='Nici' group by performer;
+select performer as band,count('x') total_band_performances from performances where performer='Nici' group by performer;
+
+
+------------------------
+select band as performer_name,
+(original_songs/total_sum_songs)*100 as per_of_recorded_tracks_owned ,
+(total_band_owned_performances/total_band_performances)*100 as  per_of_concert_perf_owned from
+((select band,count('x') original_songs from (select musician passport,band from involvement) NATURAL JOIN (select writer passport, title from tracks) group by band )
+natural join
+(select performer as band,count('x') total_sum_songs from (select pair, performer from albums) NATURAL JOIN (select pair, title from tracks) group by performer)
+natural join
+(select performer band,count('x') total_band_owned_performances from performances where songwriter in (select musician from involvement where band = performer)
+group by performer)
+natural join
+(select performer as band,count('x') total_band_performances from performances group by performer))
+where total_sum_songs >= original_songs and total_band_performances>=total_band_owned_performances
+and total_band_performances!=0 and total_sum_songs!=0;

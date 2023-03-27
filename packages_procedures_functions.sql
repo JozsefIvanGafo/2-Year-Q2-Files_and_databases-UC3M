@@ -7,6 +7,7 @@ CREATE OR REPLACE PACKAGE melopack as
 	,new_title CHAR,new_release_date DATE, new_publisher VARCHAR2, new_manager NUMBER,new_seq NUMBER
 	,new_writer VARCHAR2,new_duration NUMBER, new_rec_date DATE, new_studio VARCHAR2, new_engineer varchar2);
     PROCEDURE delete_track(new_pair CHAR, new_seq NUMBER);
+	PROCEDURE report;
 end melopack;
 
 
@@ -65,13 +66,101 @@ exception
 	when too_many_rows then dbms_output.put_line('too many rows returned');
 	when others then dbms_output.put_line('other error occurred');
 end;
+
+PROCEDURE report is
+begin 
+	dbms_output.put_line('Performer`s Statistics');
+    dbms_output.put_line('----------------------------------');
+	dbms_output.put_line('Number of albums per format');
+	for myrow in (select format,count('x') num from albums where performer = melopack.current_performer group by format)
+		loop
+		dbms_output.put_line(myrow.format||'-'||myrow.num);
+	end loop;
+	dbms_output.put_line('----------------------------------');
+	dbms_output.put_line('Average number of songs per format of album');
+	for myrow in (select format,count('x'),avg(ntracks) average from (select pair,format from albums where performer = melopack.current_performer)
+		NATURAL JOIN
+		(select count('x') ntracks, pair from tracks group by pair) group by format)
+		loop
+		dbms_output.put_line(myrow.format||'-'||myrow.average);
+	end loop;
+	dbms_output.put_line('----------------------------------');
+	dbms_output.put_line('Average duration per format of album');
+	for myrow in (select format,count('x'),avg(sumation) sumation from (select pair,format from albums where performer = melopack.current_performer)
+		NATURAL JOIN
+		(select sum(duration) sumation, pair from tracks group by pair) group by format)
+		loop
+		dbms_output.put_line(myrow.format||'-'||myrow.sumation);
+	end loop;
+	dbms_output.put_line('----------------------------------');
+	dbms_output.put_line('Periodicity');
+	for myrow in (select datenum/num_alb months_between_albums from
+		(select months_between(max(rel_date),min(rel_date)) datenum,count('x') num_alb 
+		from albums where performer = melopack.current_performer
+		group by performer))
+		loop
+		dbms_output.put_line(myrow.months_between_albums);
+	end loop;
+    dbms_output.put_line('----------------------------------');
+	dbms_output.put_line('Information for publisher');
+	for myrow in (select publisher,npublisher,round((npublisher/ntotal)*100,2) pub_per from
+    (select publisher, count('x') npublisher from (select distinct publisher,pair from albums where performer = melopack.current_performer)group by publisher)
+    NATURAL JOIN
+    (select count('x') ntotal from(select distinct performer ,publisher,pair from albums where performer = melopack.current_performer)group by performer))
+		loop
+		dbms_output.put_line('PUBLISHER: '||myrow.publisher||'| Number of works: '||myrow.npublisher||' -> percentage: '||myrow.pub_per);
+	end loop;
+    dbms_output.put_line('----------------------------------');
+	dbms_output.put_line('Information for studio');
+	for myrow in (select studio,nstudio, round((nstudio/ntotal)*100,2) stu_per from (
+    (select studio , count('x') nstudio from((select pair from albums where performer = melopack.current_performer) NATURAL JOIN (select pair, studio, engineer from tracks)) group by studio)
+    NATURAL JOIN
+    (select count('x') ntotal from ((select performer,pair from albums where performer = melopack.current_performer) NATURAL JOIN (select pair, studio from tracks)) group by performer)))
+		loop
+		dbms_output.put_line('STUDIO: '||myrow.studio||'| Number of works: '||myrow.nstudio||' -> percentage '||myrow.stu_per);
+	end loop;
+
+    dbms_output.put_line('----------------------------------');
+	dbms_output.put_line('Information for Engineer');
+	for myrow in (select engineer,nengineer, round((nengineer/ntotal)*100,2) as eng_per from (
+    (select engineer , count('x') nengineer from((select pair from albums where performer = melopack.current_performer) NATURAL JOIN (select pair, engineer from tracks)) group by engineer)
+    NATURAL JOIN
+    (select count('x') ntotal from ((select performer,pair from albums where performer = melopack.current_performer) NATURAL JOIN (select pair,engineer from tracks)) group by performer)))
+		loop
+		dbms_output.put_line('ENGINEER: '||myrow.engineer||'| Number of works: '||myrow.nengineer||' -> percentage '||myrow.eng_per);
+	end loop;
+    dbms_output.put_line('----------------------------------');
+	dbms_output.put_line('Information for album manager');
+	for myrow in (select manager,nmanager, round((nmanager/ntotal)*100,2) mana_per from (
+    (select manager , count('x') nmanager from((select pair, manager from albums where performer = melopack.current_performer)) group by manager)
+    NATURAL JOIN
+    (select count('x') ntotal from (select performer,pair,manager from albums where performer = melopack.current_performer) group by performer)))
+		loop
+		dbms_output.put_line('ALBUM MANAGER: '||myrow.manager||'| Number of works: '||myrow.nmanager||' -> percentage '||myrow.mana_per);
+	end loop;
+    dbms_output.put_line('----------------------------------');
+	dbms_output.put_line('Information for concerts manager');
+	for myrow in (select manager,nmanager, round((nmanager/ntotal)*100,2) as con_man_per from (
+    (select manager , count('x') nmanager from((select manager from concerts where performer = melopack.current_performer)) group by manager)
+    NATURAL JOIN
+    (select count('x') ntotal from (select performer,manager from concerts where performer = melopack.current_performer) group by performer)))
+		loop
+		dbms_output.put_line('CONCERT MANAGER: '||myrow.manager||'| Number of works: '||myrow.nmanager||' -> percentage '||myrow.con_man_per);
+	end loop;
+	dbms_output.put_line('----------------------------------');
+exception
+	when no_data_found then dbms_output.put_line('No row returned');
+	when too_many_rows then dbms_output.put_line('too many rows returned');
+	when others then dbms_output.put_line('other error occurred');
+end report;
+
 end melopack;
 
 ------------------------------------------END OF BODY----------------------------------------
 exec melopack.performer_proc('Begga Ruiz')
 ---                             perf            pair    format  album     title           release     pub           man   seq      writer      dur     rec        studio              engineer
-exec melopack.insert_album('Z1290OHZ7079WKA','S','72 Seasons','Holiday of blues','28/11/22','Archer',555399004,2,'SE>>0222003242',275,'17/08/95','Stretchers Studios','Ulrich')
-exec melopack.delete_track('Z1290OHZ7079WKA',2)
+exec melopack.insert_album('Z1290OHZ7079WKA','S','72 Seasons','Holiday of blues','28/11/22','Archer',555399004,3,'SE>>0222003242',275,'17/08/95','Stretchers Studios','Ulrich')
+exec melopack.delete_track('Z1290OHZ7079WKA',3)
 
 insert into Albums (pair,performer,format,title,rel_date,publisher,manager)
 values ('Z1290OHZ7079WKA','Begga Ruiz','S','72 Seasons','28/11/22','Archer',555399004);
@@ -105,9 +194,18 @@ begin
 		loop
 		dbms_output.put_line(myrow.format||'-'||myrow.sumation);
 	end loop;
+	dbms_output.put_line('----------------------------------');
+	dbms_output.put_line('Periodicity');
+	for myrow in (select datenum/num_alb months_between_albums from
+		(select months_between(max(rel_date),min(rel_date)) datenum,count('x') num_alb 
+		from albums where performer = melopack.get_current_performer
+		group by performer))
+		loop
+		dbms_output.put_line(myrow.months_between_albums);
+	end loop;
     dbms_output.put_line('----------------------------------');
 	dbms_output.put_line('Information for publisher');
-	for myrow in (select publisher,(npublisher/ntotal)*100 pub_per from
+	for myrow in (select publisher,round((npublisher/ntotal)*100,2) pub_per from
     (select publisher, count('x') npublisher from (select distinct publisher,pair from albums where performer = melopack.get_current_performer)group by publisher)
     NATURAL JOIN
     (select count('x') ntotal from(select distinct performer ,publisher,pair from albums where performer = melopack.get_current_performer)group by performer))
@@ -117,7 +215,7 @@ begin
     
     dbms_output.put_line('----------------------------------');
 	dbms_output.put_line('Information for studio');
-	for myrow in (select studio, (nstudio/ntotal)*100 stu_per from (
+	for myrow in (select studio, round((nstudio/ntotal)*100,2) stu_per from (
     (select studio , count('x') nstudio from((select pair from albums where performer = melopack.get_current_performer) NATURAL JOIN (select pair, studio, engineer from tracks)) group by studio)
     NATURAL JOIN
     (select count('x') ntotal from ((select performer,pair from albums where performer = melopack.get_current_performer) NATURAL JOIN (select pair, studio from tracks)) group by performer)))
@@ -127,7 +225,7 @@ begin
 
     dbms_output.put_line('----------------------------------');
 	dbms_output.put_line('Information for Engineer');
-	for myrow in (select engineer, (nengineer/ntotal)*100 as eng_per from (
+	for myrow in (select engineer, round((nengineer/ntotal)*100,2) as eng_per from (
     (select engineer , count('x') nengineer from((select pair from albums where performer = melopack.get_current_performer) NATURAL JOIN (select pair, engineer from tracks)) group by engineer)
     NATURAL JOIN
     (select count('x') ntotal from ((select performer,pair from albums where performer = melopack.get_current_performer) NATURAL JOIN (select pair,engineer from tracks)) group by performer)))
@@ -137,7 +235,7 @@ begin
 
     dbms_output.put_line('----------------------------------');
 	dbms_output.put_line('Information for studio');
-	for myrow in (select manager, (nmanager/ntotal)*100 mana_per from (
+	for myrow in (select manager, round((nmanager/ntotal)*100,2) mana_per from (
     (select manager , count('x') nmanager from((select pair, manager from albums where performer = melopack.get_current_performer)) group by manager)
     NATURAL JOIN
     (select count('x') ntotal from (select performer,pair,manager from albums where performer = melopack.get_current_performer) group by performer)))
@@ -146,7 +244,7 @@ begin
 	end loop;
     dbms_output.put_line('----------------------------------');
 	dbms_output.put_line('Information for concerts manager');
-	for myrow in (select manager, (nmanager/ntotal)*100 as con_man_per from (
+	for myrow in (select manager, round((nmanager/ntotal)*100,2) as con_man_per from (
     (select manager , count('x') nmanager from((select manager from concerts where performer = melopack.get_current_performer)) group by manager)
     NATURAL JOIN
     (select count('x') ntotal from (select performer,manager from concerts where performer = melopack.get_current_performer) group by performer)))

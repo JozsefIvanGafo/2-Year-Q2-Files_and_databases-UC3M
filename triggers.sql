@@ -221,3 +221,47 @@ insert into PERFORMANCES (performer,when,sequ,songtitle,songwriter,duration) (se
 
 
 drop CASCADE table bulk_insert;
+
+--------------------
+--create new table
+CREATE TABLE bulk_insert(
+performer  VARCHAR2(35) not null,
+when  DATE not null,
+sequ number(3),
+songtitle varchar2(100),
+songwriter  varchar2(14),
+duration number(4),
+CONSTRAINT PK_MANAGERS33 PRIMARY KEY(performer,when,sequ)
+);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-------------
+
+CREATE OR REPLACE TRIGGER reverse_trigger
+BEFORE INSERT ON songs
+FOR EACH ROW
+DECLARE
+badsong EXCEPTION;
+flag number :=0;
+BEGIN
+    select count('x') into flag
+    from (select * from songs where title = :new.title and writer = :new.cowriter and cowriter = :new.writer);
+    if flag > 0
+        then raise badsong;
+    end if;
+exception
+    when badsong then raise_application_error(-20001,'WRONG SONG!');
+end reverse_trigger;
